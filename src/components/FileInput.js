@@ -1,5 +1,5 @@
-// FileInput.js
 import React from 'react';
+import { Box, Button, Typography } from '@mui/material'; // Import Material-UI components
 
 const FileInput = ({ onUpload }) => {
   const handleFileChange = (event) => {
@@ -8,10 +8,20 @@ const FileInput = ({ onUpload }) => {
   };
 
   return (
-    <div>
-      <label htmlFor="fileInput">Upload HAR File:</label>
-      <input type="file" id="fileInput" onChange={handleFileChange} />
-    </div>
+    <Box mb={3}>
+      <Typography variant="h4" gutterBottom>Upload HAR File:</Typography>
+      <input
+        type="file"
+        onChange={handleFileChange}
+        style={{ display: 'none' }}
+        id="fileInput"
+      />
+      <label htmlFor="fileInput">
+        <Button variant="contained" component="span">
+          Choose File
+        </Button>
+      </label>
+    </Box>
   );
 };
 

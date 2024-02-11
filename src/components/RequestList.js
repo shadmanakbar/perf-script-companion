@@ -1,6 +1,8 @@
 // RequestList.js
 import React, { useState, useEffect } from 'react';
-import './RequestList.css';
+
+import { Typography, Button, TextField, List, ListItem, ListItemText, ListItemSecondaryAction, Collapse, Paper } from '@mui/material';
+
 
 const RequestList = ({ requests, showRepeatedRequests, filteredRequests }) => {
   const [expandedRequestBody, setExpandedRequestBody] = useState(null);
@@ -10,6 +12,10 @@ const RequestList = ({ requests, showRepeatedRequests, filteredRequests }) => {
   const [selectedRepeatedRequestPath, setSelectedRepeatedRequestPath] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState([]);
+  const staticResourceExtensions = ['.png', '.js', '.jpeg', '.json', '.css','.css','.woff','.jpg'];
+
+
+
 
   // New state variables for visibility toggles
   const [showFilteredRequestCounts, setShowFilteredRequestCounts] = useState(true);
@@ -113,111 +119,122 @@ const RequestList = ({ requests, showRepeatedRequests, filteredRequests }) => {
 
   return (
     <div>
+ 
       <div>
         <button onClick={toggleRepeatedRequestCounts}>
           {showRepeatedRequestCounts ? 'Hide Repeated Request Counts' : 'Show Repeated Request Counts'}
         </button>
       </div>
-      <div>
-        <button onClick={toggleTimeDifferences}>
-          {showTimeDifferences ? 'Hide Time Differences' : 'Show Time Differences'}
-        </button>
-      </div>
+
 
      
       {/* Display Filtered Request Counts if enabled */}
       {showFilteredRequestCounts && filteredRequests ? (
-        <h2>Filtered Request Counts:</h2>
+          <Typography variant="h5" gutterBottom>Filtered Request Counts</Typography>
       ) : null}
 
       {/* Display Repeated Request Counts if enabled */}
       {showRepeatedRequestCounts ? (
-        <ul>
-          {Object.entries(repeatedRequestCounts).map(([key, count]) => (
-            <li key={key}>
-              <button onClick={() => handleRepeatedRequestPathClick(JSON.parse(key).path)}>
-                {JSON.parse(key).method} - {JSON.parse(key).path}: {count} times
-              </button>
-              {selectedRepeatedRequestPath === JSON.parse(key).path && (
-                <ul>
-                  {getRequestsForRepeatedPath(selectedRepeatedRequestPath).map(
-                    (request, index) => (
-                      <li key={index}>
-                        {index + 1}: {calculateTimeDifference(request)} milliseconds
-                      </li>
-                    )
-                  )}
-                </ul>
-              )}
-            </li>
-          ))}
-        </ul>
-      ) : null}
+  <List>
+    {Object.entries(repeatedRequestCounts)
+      .filter(([key, _]) => {
+        const url = JSON.parse(key).path.toLowerCase();
+        return !staticResourceExtensions.some(extension => url.includes(extension));
+      })
+      .map(([key, count]) => (
+        <ListItem key={key} disablePadding>
+          <Button onClick={() => handleRepeatedRequestPathClick(JSON.parse(key).path)}>
+            <Typography>
+              {JSON.parse(key).method} - {JSON.parse(key).path}: {count} times
+            </Typography>
+          </Button>
+          {selectedRepeatedRequestPath === JSON.parse(key).path && (
+            <List>
+              {getRequestsForRepeatedPath(selectedRepeatedRequestPath).map((request, index) => (
+                <ListItem key={index} disablePadding>
+                  <Typography>
+                    {index + 1}: {calculateTimeDifference(request)} milliseconds
+                  </Typography>
+                </ListItem>
+              ))}
+            </List>
+          )}
+        </ListItem>
+      ))}
+  </List>
+) : null}
+
 
       {/* Display All Requests */}
       <ol>
-        <h1>All Request</h1>
-        {Array.isArray(requests) &&
-          requests.map((request, index) => (
-            <li key={index}>
-              <div
-                style={{ cursor: 'pointer' }}
-                onClick={() => toggleRequestBody(index)}
-              >
-                <strong></strong>{' '}
-                {getPathWithoutBaseUrl(request.request.url)} | <strong>Method:</strong>{' '}
-                {request.request.method}
-              </div>
-              {expandedRequestBody === index && (
-                <div>
-                  <strong>Request Body:</strong>
-                  <pre>{JSON.stringify(request.request.postData?.text, null, 2)}</pre>
-                </div>
-              )}
-              {showTimeDifferences && (
-                <div>
-                  <strong>Time Elapsed since Start:</strong>{' '}
-                  {calculateTimeDifference(request)} milliseconds
-                </div>
-              )}
-            </li>
-          ))}
-      </ol>
+  <Typography variant="h5" gutterBottom>Request List</Typography>
+  {Array.isArray(requests) &&
+    requests
+      // Filter out requests with static resource file extensions
+      .filter(request => {
+        const url = request.request.url.toLowerCase();
+        return !staticResourceExtensions.some(extension => url.includes(extension));
+      })
+      .map((request, index) => (
+        <List key={index}>
+          <ListItem button onClick={() => toggleRequestBody(index)}>
+            <ListItemText primary={`${request.request.method} - ${getPathWithoutBaseUrl(request.request.url)}`} />
+          </ListItem>
+        </List>
+      ))}
+</ol>
  {/* Search Box */}
- <div>
-        <label htmlFor="searchTerm">Search Term:</label>
-        <input type="text" id="searchTerm" value={searchTerm} onChange={handleSearchTermChange} />
-      </div>
+ <TextField
+        id="searchTerm"
+        label="Search Term"
+        value={searchTerm}
+        onChange={handleSearchTermChange}
+        variant="outlined"
+        margin="normal"
+        fullWidth
+      />
 
-      <div>
-        <h2>Search Results:</h2>
-        <ul>
-          {searchResults.map((result, index) => (
-            <li key={index}   style={{ cursor: 'pointer' }} onClick={() => setSelectedSearchResult(index)}>
-              {/* Display relevant information about the search result */}
-              {result.request.method} - {getPathWithoutBaseUrl(result.request.url)}
+      <Typography variant="h6" gutterBottom>Search Results:</Typography>
+    
 
-              {/* Display Response Body only for the selected search result */}
-              {selectedSearchResult === index && (
-                <div>
-                  <strong>Response Body:</strong>
-                  <pre>{JSON.stringify(result.response?.content?.text, null, 2)}</pre>
-                </div>
-              )}
-            </li>
-          ))}
-        </ul>
-      </div>
+<List>
+  {searchResults
+    .filter(result => {
+      const url = result.request.url.toLowerCase();
+      const staticResourceExtensions = ['.png', '.js', '.jpeg', '.json', '.css'];
+      return !staticResourceExtensions.some(extension => url.includes(extension));
+    })
+    .map((result, index) => (
+      <React.Fragment key={index}>
+        <ListItem>
+          <ListItemText
+            primary={`${result.request.method} - ${getPathWithoutBaseUrl(result.request.url)}`}
+            onClick={() => toggleRequestBody(index)}
+            style={{ cursor: 'pointer' }}
+          />
+        </ListItem>
+        {expandedRequestBody === index && (
+          <ListItem>
+            <ListItemText
+              primary={`Response Body: ${JSON.stringify(result.response?.content?.text, null, 2)}`}
+            />
+          </ListItem>
+        )}
+      </React.Fragment>
+    ))}
+</List>
+
 
       {/* ... (other code) */}
 
       {/* Display Complete Response */}
       {selectedRequest && (
-        <div>
-          <h2>Complete Response:</h2>
-          {/* Display the complete response based on your data structure */}
-          <pre>{JSON.stringify(selectedRequest.response, null, 2)}</pre>
-        </div>
+            <div>
+            <Typography variant="h6" gutterBottom>Complete Response:</Typography>
+            <Paper variant="outlined">
+              <pre>{JSON.stringify(selectedRequest.response, null, 2)}</pre>
+            </Paper>
+          </div>
       )}
     </div>
   );

@@ -1,17 +1,17 @@
-// App.js
 import React, { useState } from 'react';
 import FileInput from './components/FileInput';
 import UrlInput from './components/UrlInput';
 import RequestList from './components/RequestList';
 import { parseHarFile, filterRequests, countRepeatedRequests } from './requestFilter';
+import { Container, Typography, Button, Grid } from '@mui/material';
 import './App.css'; 
+
 function App() {
   const [harData, setHarData] = useState(null);
   const [baseUrl, setBaseUrl] = useState('');
   const [showFilteredRequests, setShowFilteredRequests] = useState(false);
   const [showRepeatedRequests, setShowRepeatedRequests] = useState(false);
   const [submissionOccurred, setSubmissionOccurred] = useState(false);
-
 
   const handleFileUpload = async (file) => {
     try {
@@ -32,7 +32,6 @@ function App() {
     setShowRepeatedRequests(true);
   };
 
-
   const filteredRequests = harData ? filterRequests(harData, baseUrl) : [];
   const repeatedRequestCounts = harData ? countRepeatedRequests(harData) : [];
 
@@ -48,22 +47,30 @@ function App() {
     setShowFilteredRequests(false);
   };
 
-  
-
   return (
-    <div>
-    <FileInput onUpload={handleFileUpload} />
-    <UrlInput onChange={handleBaseUrlChange} />
-    <button onClick={handleRequestListSubmit}>Analyze HAR</button>
-    <br/><br/>
-
-    {submissionOccurred && (
-      <RequestList
-        requests={showFilteredRequests ? filteredRequests : repeatedRequestCounts}
-        filteredRequests={showFilteredRequests}
-      />
-    )}
-  </div>
+    <Container maxWidth="md">
+      <Typography variant="h2" gutterBottom>HAR File Analyzer</Typography>
+      <Grid container spacing={2}>
+        <Grid item xs={12}>
+          <FileInput onUpload={handleFileUpload} />
+        </Grid>
+        <Grid item xs={12}>
+          <UrlInput onChange={handleBaseUrlChange} />
+        </Grid>
+        <Grid item xs={12}>
+          <Button variant="contained" color="primary" onClick={handleRequestListSubmit}>
+            Analyze HAR
+          </Button>
+        </Grid>
+      </Grid>
+      <br/><br/>
+      {submissionOccurred && (
+        <RequestList
+          requests={showFilteredRequests ? filteredRequests : repeatedRequestCounts}
+          filteredRequests={showFilteredRequests}
+        />
+      )}
+    </Container>
   );
 }
 
